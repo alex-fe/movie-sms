@@ -1,6 +1,7 @@
-from flask import Flask, Response
-from twilio.twiml.messaging_response import Message, MessagingResponse
+from flask import Flask, Response, request
+from twilio.twiml.messaging_response import MessagingResponse
 
+from query import movie_data_query
 
 app = Flask(__name__)
 
@@ -11,13 +12,16 @@ def check_app():
     return Response("Hello world"), 200
 
 
-@app.route("/twilio", methods=["POST"])
+@app.route("/twilio", methods=['GET', 'POST'])
 def inbound_sms():
-    # message_body = request.form['Body']
-    resp = MessagingResponse()
+    received_sms = request.values.get('Body', None)
+    command, *title, zipcode = received_sms.lower().split()
 
-    # replyText = getReply(message_body)
-    resp.message('Hello')
+    resp = MessagingResponse()
+    if command == 'info':
+        resp.message(movie_data_query(t=title))
+    else:
+        resp.message(title)
     return str(resp)
 
 
