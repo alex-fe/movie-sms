@@ -8,6 +8,12 @@ OMDB_LINK = 'http://www.omdbapi.com/'
 
 
 def sum_ratings(data):
+    """Average ratings from three sources used in OMDB data.
+    Args:
+        data (json): OMDB data in json format.
+    Returns:
+        Float rating average.
+    """
     metascore = int(data['Metascore'])
     imdb_score = float(data['imdbRating']) * 10
     rotten_tomatoes_score = int(data['Ratings'][1]['Value'][:-1])
@@ -15,6 +21,12 @@ def sum_ratings(data):
 
 
 def movie_data_query(**kwargs):
+    """Query OMDB for information on passed film.
+    Args:
+        kwargs (dict): Arguments for query.
+    Returns:
+        Movie data in formatted string.
+    """
     kwargs.update({'apikey': OMDB_API_KEY})
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
     data = json.load(urllib.request.urlopen(link))

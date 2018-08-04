@@ -14,14 +14,19 @@ def check_app():
 
 @app.route("/twilio", methods=['GET', 'POST'])
 def inbound_sms():
+    """Navigate sms conversation based on received command.
+    Returns:
+        String response to text back.
+    """
     received_sms = request.values.get('Body', None)
-    command, *title, zipcode = received_sms.lower().split()
-
+    command, received_sms = received_sms.lower().split(maxsplit=1)
     resp = MessagingResponse()
     if command == 'info':
-        resp.message(movie_data_query(t=title))
+        resp.message(movie_data_query(t=received_sms))
+    elif command == 'showtimes':
+        title, zipcode = received_sms.rsplit(maxsplit=1)
     else:
-        resp.message(title)
+        resp.message("Incorrect command '{}' sent".format(command))
     return str(resp)
 
 
