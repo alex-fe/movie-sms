@@ -58,7 +58,7 @@ def format_movie_data(movies, title):
     Returns:
         String with movie title and times.
     """
-    selection = next(mov for mov in movies.keys() if title in mov)
+    selection = next(mov for mov in movies.keys() if title in mov.lower())
     showtimes = '\n'.join(
         "{}: {}".format(theater, ', '.join(st))
         for (theater, st) in movies[selection].items()

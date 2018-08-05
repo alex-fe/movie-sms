@@ -26,7 +26,7 @@ def inbound_sms():
         resp.message(movie_data_query(t=received_sms))
     elif command == 'showtimes':
         title, zipcode = received_sms.rsplit(maxsplit=1)
-        date = datetime.today().strftime('%d-%m-%Y')
+        date = datetime.today().strftime('%m-%d-%Y')
         showtime_str = showtimes_query(t=title, zip=zipcode, start_date=date)
         resp.message(showtime_str)
     else:
