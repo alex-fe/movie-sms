@@ -1,7 +1,8 @@
+from datetime import datetime
 from flask import Flask, Response, request
 from twilio.twiml.messaging_response import MessagingResponse
 
-from query import movie_data_query
+from query import movie_data_query, showtimes_query
 
 app = Flask(__name__)
 
@@ -25,6 +26,8 @@ def inbound_sms():
         resp.message(movie_data_query(t=received_sms))
     elif command == 'showtimes':
         title, zipcode = received_sms.rsplit(maxsplit=1)
+        date = datetime.today().strftime('%Y-%m-%d')
+        showtimes_query(t=title, zip=zipcode, start_date=date)
     else:
         resp.message("Incorrect command '{}' sent".format(command))
     return str(resp)
