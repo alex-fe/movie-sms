@@ -50,11 +50,29 @@ def movie_data_query(**kwargs):
     return movie_str.format(data, sum_ratings(data))
 
 
-def format_movie_data(movies):
-    pass
+def format_movie_data(movies, title):
+    """Find film and create string representation.
+    Args:
+        movies (dict): Nested dict of films and showtimes.
+        title (str): Title of desired movie.
+    Returns:
+        String with movie title and times.
+    """
+    selection = next(mov for mov in movies.keys() if title in mov)
+    showtimes = '\n'.join(
+        "{}: {}".format(theater, ', '.join(st))
+        for (theater, st) in movies[selection].items()
+    )
+    return '\n'.join((selection, showtimes))
 
 
 def showtimes_query(**kwargs):
+    """Scrape showtimes from site and return data.
+    Args:
+        kwargs (dict): Arguments for query.
+    Returns:
+        Movie data in formatted string.
+    """
     req = urllib.request.Request(
         FANDANGO_LINK.format(kwargs), headers={'User-Agent': 'Mozilla/5.0'}
     )
@@ -65,10 +83,10 @@ def showtimes_query(**kwargs):
         theater = theater_table.find('h4').text.strip()
         for row in theater_table.find_all('tr')[1:]:
             name = ' '.join(row.find('td').text.split())
-            showtimes = [st.text for st in row.find_all('li')]
+            showtimes = [
+                st.text if 'p' not in st.text
+                else st.text[:st.text.index('p') + 1]
+                for st in row.find_all('li')
+            ]
             movies[name].update({theater: showtimes})
-    return movies
-
-
-if __name__ == '__main__':
-    showtimes_query(zip='97211', start_date='8-5-2018')
+    return format_movie_data(movies, kwargs['t'])
