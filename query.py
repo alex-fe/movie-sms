@@ -37,17 +37,23 @@ def movie_data_query(**kwargs):
     """
     kwargs.update({'apikey': OMDB_API_KEY})
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
-    data = json.load(urllib.request.urlopen(link))
-    movie_str = """
-    {0[Title]}
-    {0[Rated]}, {0[Year]}, {0[Runtime]}
-    {0[Genre]}
-    Director: {0[Director]}
-    Cast: {0[Actors]}
-    Plot: {0[Plot]}
-    Rating: {1}%
-    """
-    return movie_str.format(data, sum_ratings(data))
+    try:
+        data = json.load(urllib.request.urlopen(link))
+    except Exception as e:
+        # TODO: Fix generic exception
+        movie_str = e
+    else:
+        movie_str = """
+        {0[Title]}
+        {0[Rated]}, {0[Year]}, {0[Runtime]}
+        {0[Genre]}
+        Director: {0[Director]}
+        Cast: {0[Actors]}
+        Plot: {0[Plot]}
+        Rating: {1}%
+        """
+        movie_str = movie_str.format(data, sum_ratings(data))
+    return movie_str
 
 
 def format_movie_data(movies, title):
