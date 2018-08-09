@@ -16,29 +16,40 @@ FANDANGO_LINK = (
 
 
 class Theater(object):
-    """docstring for Theater."""
     def __init__(self, theater, showtimes):
         self.theater = theater
         self.showtimes = showtimes
 
     def __str__(self):
-        return self.theater
+        return '{}: {}'.format(self.title, ', '.join(self.showtimes))
 
 
 class Movie(object):
-    """docstring for Movie."""
     def __init__(self, line):
         self.split_line(line)
         self.theaters = []
 
     def split_line(self, line):
-        items = re.split('\W+', line.lower())
-        self.title = ' '.join(items[:-5])
-        self.duration = ' '.join(items[-4:])
-        self.rating = items[-5:-4][0]
+        """Split the movie information into its correct variables.
+        Args:
+            line (str): Movie information condensed into passed string.
+        """
+        items = re.split('\W+', line)
+        if not all(char in line for char in ['hr', 'min', '(', ')']):
+            self.title = line
+            self.duration = ""
+            self.rating = ""
+        else:
+            self.title = ' '.join(items[:-5])
+            self.duration = ' '.join(items[-4:])
+            self.rating = items[-5:-4][0]
+
+    @property
+    def showtimes(self):
+        return '\n'.join(self.theaters)
 
     def __str__(self):
-        return self.title
+        return ', '.join(self.__dict__.values())
 
 
 def sum_ratings(data):
@@ -51,7 +62,7 @@ def sum_ratings(data):
     metascore = int(data['Metascore'])
     imdb_score = float(data['imdbRating']) * 10
     rotten_tomatoes_score = int(data['Ratings'][1]['Value'][:-1])
-    return (metascore + imdb_score + rotten_tomatoes_score) / 3
+    return round((metascore + imdb_score + rotten_tomatoes_score) / 3)
 
 
 def movie_data_query(**kwargs):
@@ -95,11 +106,8 @@ def format_movie_data(movies, title):
     except StopIteration:
         return "Couldn't find movie {} in showtimes".format(title)
     else:
-        showtimes = '\n'.join(
-            "{}: {}".format(theater, ', '.join(st))
-            for (theater, st) in movies[selection].items()
-        )
-        return '\n'.join((selection, showtimes))
+        movie = movies[selection]
+        return '\n'.join([str(movie), movie.showtimes])
 
 
 def showtimes_query(**kwargs):
@@ -122,17 +130,9 @@ def showtimes_query(**kwargs):
         for theater_table in soup.find_all('table'):
             theater = theater_table.find('h4').text.strip()
             for row in theater_table.find_all('tr')[1:]:
-                movie_line = ' '.join(row.find('td').text.split())
+                movie_line = ' '.join(row.find('td').text.split()).lower()
                 showtimes = [st.text for st in row.find_all('span')]
                 movie = Movie(movie_line)
                 movie.theaters.append(Theater(theater, showtimes))
                 movies.append(movie)
         return format_movie_data(movies, kwargs['t'])
-
-
-if __name__ == '__main__':
-    import datetime
-    date = datetime.datetime.today().strftime('%m-%d-%Y')
-    showtime_str = showtimes_query(
-        t='Christopher Robin', zip='97211', start_date=date
-    )
