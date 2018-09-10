@@ -1,21 +1,31 @@
 from datetime import datetime
-from flask import Flask, Response, request
+from flask import Flask, render_template, request
+from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
+
+from private_info import TWILIO_AUTH_TOKEN, TWILIO_SID
 
 from query import movie_data_query, showtimes_query
 
-app = Flask(__name__)
+
 COMMANDS = ['info', 'showtimes']
 DEFAULT_ERR_MESSAGE = "{reason}. Please try again using 'info' or 'showtimes'."
 
+app = Flask(__name__,  template_folder='templates')
+client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
 
-@app.route("/")
+
+@app.route("/", methods=['GET'])
 def check_app():
-    # returns a simple string stating the app is working
-    return Response("Hello world"), 200
+    return render_template('main.html', messages=client.messages.list())
 
 
-@app.route("/twilio", methods=['GET', 'POST'])
+@app.template_filter('strftime')
+def _filter_datetime(date):
+    return datetime.strftime(date, '%c')
+
+
+@app.route("/movies", methods=['GET', 'POST'])
 def inbound_sms():
     """Navigate sms conversation based on received command.
     Returns:
