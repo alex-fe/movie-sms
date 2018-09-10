@@ -27,10 +27,13 @@ def inbound_sms():
     Returns:
         String response to text back.
     """
-    message_body = request.form['Body'].lower().split()
+    message_body = request.form['Body'].lower()
+    message_body_split = message_body.split()
     resp = MessagingResponse()
     if not message_body:
         resp.message('Incoming message was blank.')
+    elif message_body_split[0] != 'showtimes':
+        resp.message(movie_data_query(t=message_body))
     else:
         if command == 'info':
             resp.message(movie_data_query(t=received_sms))

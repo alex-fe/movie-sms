@@ -63,9 +63,9 @@ def movie_data_query(**kwargs):
     """
     kwargs.update({'apikey': OMDB_API_KEY})
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
-    data = json.loads(urllib.request.urlopen(link))
+    data = json.loads(urllib.request.urlopen(link).read().decode('utf-8'))
     if data.get('Error', '') == 'Movie not found!':
-        movie_str = 'Movie info for {} not found.'.format(kwargs['t'])
+        movie_str = 'Movie info for {} not found.'.format(kwargs['t'].title())
     else:
         ratings = {
             'metascore': data['Metascore'],
@@ -81,7 +81,8 @@ def movie_data_query(**kwargs):
             "To receive showtimes in your area for this film, please respond "
             "SHOWTIMES and the zipcode. E.g. SHOWTIMES 97211"
         )
-    return movie_str.format(data, ratings)
+        movie_str = movie_str.format(data, ratings)
+    return movie_str
 
 
 def format_movie_data(movies, title):
