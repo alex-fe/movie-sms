@@ -7,10 +7,6 @@ from private_info import TWILIO_AUTH_TOKEN, TWILIO_SID
 
 from query import movie_data_query, showtimes_query
 
-
-COMMANDS = ['info', 'showtimes']
-DEFAULT_ERR_MESSAGE = "{reason}. Please try again using 'info' or 'showtimes'."
-
 app = Flask(__name__,  template_folder='templates')
 client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
 
@@ -31,14 +27,10 @@ def inbound_sms():
     Returns:
         String response to text back.
     """
-    received_sms = request.values.get('Body', None)
+    message_body = request.form['Body'].lower().split()
     resp = MessagingResponse()
-    try:
-        command, received_sms = received_sms.lower().split(maxsplit=1)
-    except AttributeError:
-        resp.message(
-            DEFAULT_ERR_MESSAGE.format(reason='Incoming message was blank')
-        )
+    if not message_body:
+        resp.message('Incoming message was blank.')
     else:
         if command == 'info':
             resp.message(movie_data_query(t=received_sms))

@@ -52,17 +52,6 @@ class Movie(object):
         return ', '.join(self.__dict__.values())
 
 
-def sum_ratings(data):
-    """Average ratings from three sources used in OMDB data.
-    Args:
-        data (json): OMDB data in json format.
-    Returns:
-        Float rating average.
-    """
-    metascore = int(data['Metascore'])
-    imdb_score = float(data['imdbRating']) * 10
-    rotten_tomatoes_score = int(data['Ratings'][1]['Value'][:-1])
-    return round((metascore + imdb_score + rotten_tomatoes_score) / 3)
 
 
 def movie_data_query(**kwargs):
@@ -74,23 +63,25 @@ def movie_data_query(**kwargs):
     """
     kwargs.update({'apikey': OMDB_API_KEY})
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
-    try:
-        data = urllib.request.urlopen(link)
-    except ValueError:
+    data = json.loads(urllib.request.urlopen(link))
+    if data.get('Error', '') == 'Movie not found!':
         movie_str = 'Movie info for {} not found.'.format(kwargs['t'])
     else:
-        data = json.load(data)
-        movie_str = """
-        {0[Title]}
-        {0[Rated]}, {0[Year]}, {0[Runtime]}
-        {0[Genre]}
-        Director: {0[Director]}
-        Cast: {0[Actors]}
-        Plot: {0[Plot]}
-        Rating: {1}%
-        """
-        movie_str = movie_str.format(data, sum_ratings(data))
-    return movie_str
+        ratings = {
+            'metascore': data['Metascore'],
+            'imdb': data['imdbRating'],
+            'rotten_tomatoes': data['Ratings'][0]['Value']
+        }
+        movie_str = (
+            "{0[Title]}\n{0[Rated]}, {0[Year]}, {0[Runtime]}\n{0[Genre]}\n"
+            "Director: {0[Director]}\nCast: {0[Actors]}\n{0[Plot]}\n"
+            "Metascore: {1[metascore]}\nIMDB: {1[imdb]}\n"
+            "Rotten Tomatoes: {1[rotten_tomatoes]}\n\n"
+            "----------\n"
+            "To receive showtimes in your area for this film, please respond "
+            "SHOWTIMES and the zipcode. E.g. SHOWTIMES 97211"
+        )
+    return movie_str.format(data, ratings)
 
 
 def format_movie_data(movies, title):
