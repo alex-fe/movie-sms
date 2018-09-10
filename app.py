@@ -35,23 +35,11 @@ def inbound_sms():
     elif message_body_split[0] != 'showtimes':
         resp.message(movie_data_query(t=message_body))
     else:
-        if command == 'info':
-            resp.message(movie_data_query(t=received_sms))
-        elif command == 'showtimes':
-            title, zipcode = received_sms.rsplit(maxsplit=1)
-            date = datetime.today().strftime('%m-%d-%Y')
-            showtime_str = showtimes_query(
-                t=title, zip=zipcode, start_date=date
-            )
-            resp.message(showtime_str)
-        else:
-            resp.message(
-                DEFAULT_ERR_MESSAGE
-                .format(
-                    reason="Command '{}' not included in acceptable commands"
-                    .format(command)
-                )
-            )
+        title = client.messages.list()[2].body.strip().lower()
+        zipcode = message_body_split[1]
+        date = datetime.today().strftime('%m-%d-%Y')
+        showtime_str = showtimes_query(t=title, zip=zipcode, start_date=date)
+        resp.message(showtime_str)
     return str(resp)
 
 
