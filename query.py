@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 
 from private_info import OMDB_API_KEY
 
+COMMANDS = ['info', 'showtimes']
 OMDB_LINK = 'http://www.omdbapi.com/'
 FANDANGO_LINK = (
     'https://www.fandango.com/theaterlistings-prn.aspx?'
@@ -21,48 +22,26 @@ class Theater(object):
         self.showtimes = showtimes
 
     def __str__(self):
-        return '{}: {}'.format(self.title, ', '.join(self.showtimes))
+        return '{}: {}'.format(self.theater, ', '.join(self.showtimes))
 
 
 class Movie(object):
-    def __init__(self, line):
-        self.split_line(line)
+    def __init__(self, title, rating, duration):
+        self.title = title
+        self.rating = rating
+        self.duration = duration
         self.theaters = []
-
-    def split_line(self, line):
-        """Split the movie information into its correct variables.
-        Args:
-            line (str): Movie information condensed into passed string.
-        """
-        items = re.split('\W+', line)
-        if not all(char in line for char in ['hr', 'min', '(', ')']):
-            self.title = line
-            self.duration = ""
-            self.rating = ""
-        else:
-            self.title = ' '.join(items[:-5])
-            self.duration = ' '.join(items[-4:])
-            self.rating = items[-5:-4][0]
 
     @property
     def showtimes(self):
-        return '\n'.join(self.theaters)
+        return '\n'.join(str(t) for t in self.theaters)
 
     def __str__(self):
-        return ', '.join(self.__dict__.values())
-
-
-def sum_ratings(data):
-    """Average ratings from three sources used in OMDB data.
-    Args:
-        data (json): OMDB data in json format.
-    Returns:
-        Float rating average.
-    """
-    metascore = int(data['Metascore'])
-    imdb_score = float(data['imdbRating']) * 10
-    rotten_tomatoes_score = int(data['Ratings'][1]['Value'][:-1])
-    return round((metascore + imdb_score + rotten_tomatoes_score) / 3)
+        """Print Movie instance as descriptive features."""
+        return ', '.join(
+            val for val in self.__dict__.values()
+            if val and not isinstance(val, list)
+        )
 
 
 def movie_data_query(**kwargs):
@@ -74,22 +53,25 @@ def movie_data_query(**kwargs):
     """
     kwargs.update({'apikey': OMDB_API_KEY})
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
-    try:
-        data = urllib.request.urlopen(link)
-    except ValueError:
-        movie_str = 'Movie info for {} not found.'.format(kwargs['t'])
+    data = json.loads(urllib.request.urlopen(link).read().decode('utf-8'))
+    if data.get('Error', '') == 'Movie not found!':
+        movie_str = 'Movie info for {} not found.'.format(kwargs['t'].title())
     else:
-        data = json.load(data)
-        movie_str = """
-        {0[Title]}
-        {0[Rated]}, {0[Year]}, {0[Runtime]}
-        {0[Genre]}
-        Director: {0[Director]}
-        Cast: {0[Actors]}
-        Plot: {0[Plot]}
-        Rating: {1}%
-        """
-        movie_str = movie_str.format(data, sum_ratings(data))
+        ratings = {
+            'metascore': data['Metascore'],
+            'imdb': data['imdbRating'],
+            'rotten_tomatoes': data['Ratings'][0]['Value']
+        }
+        movie_str = (
+            "{0[Title]}\n{0[Rated]}, {0[Year]}, {0[Runtime]}\n{0[Genre]}\n"
+            "Director: {0[Director]}\nCast: {0[Actors]}\n{0[Plot]}\n"
+            "Metascore: {1[metascore]}\nIMDB: {1[imdb]}\n"
+            "Rotten Tomatoes: {1[rotten_tomatoes]}\n\n"
+            "----------\n"
+            "To receive showtimes in your area for this film, please respond "
+            "SHOWTIMES and the zipcode. E.g. SHOWTIMES 97211"
+        )
+        movie_str = movie_str.format(data, ratings)
     return movie_str
 
 
@@ -101,13 +83,31 @@ def format_movie_data(movies, title):
     Returns:
         String with movie title and times.
     """
+    # import pdb; pdb.set_trace()
     try:
-        selection = next(mov for mov in movies if title in mov.title)
+        selection = next(mov for mov in movies.values() if title in mov.title)
     except StopIteration:
         return "Couldn't find movie {} in showtimes".format(title)
     else:
-        movie = movies[selection]
-        return '\n'.join([str(movie), movie.showtimes])
+        movie = movies[selection.title]
+        return '\n'.join([str(movie).title(), movie.showtimes])
+
+
+def split_line(line):
+    """Split the movie information into its correct variables.
+    Args:
+        line (str): Movie information condensed into passed string.
+    """
+    if not all(char in line for char in ['hr', 'min', '(', ')']):
+        title = line
+        duration = ""
+        rating = ""
+    else:
+        items = re.split('\W+', line)
+        title = ' '.join(items[:-5])
+        duration = ' '.join(items[-4:])
+        rating = items[-5:-4][0]
+    return title, rating, duration
 
 
 def showtimes_query(**kwargs):
@@ -126,13 +126,16 @@ def showtimes_query(**kwargs):
         return 'Showtimes for {} not found.'.format(kwargs['t'])
     else:
         soup = BeautifulSoup(html, 'html.parser')
-        movies = []
+        movies = {}
         for theater_table in soup.find_all('table'):
             theater = theater_table.find('h4').text.strip()
             for row in theater_table.find_all('tr')[1:]:
                 movie_line = ' '.join(row.find('td').text.split()).lower()
+                title, rating, duration = split_line(movie_line)
+                print(title, rating, duration)
+                movie = movies.get(title, Movie(title, rating, duration))
                 showtimes = [st.text for st in row.find_all('span')]
-                movie = Movie(movie_line)
                 movie.theaters.append(Theater(theater, showtimes))
-                movies.append(movie)
+                if movie not in movies:
+                    movies[title] = movie
         return format_movie_data(movies, kwargs['t'])

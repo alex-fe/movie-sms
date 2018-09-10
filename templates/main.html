@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <title>Movie Times</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    </head>
+    <body>
+      {% for message in messages %}
+        <div>
+          <ul>
+            <li>
+              <div>{{ message.from_ }} ---> {{ message.to }}</div>
+              <div>Sent: {{ message.date_sent|strftime }}</div>
+              <div>Direction: {{ message.direction }}</div>
+              <div>{{ message.body }}</div>
+            </li>
+          </ul>
+        </div>
+      {% endfor %}
+    </body>
+</html>
