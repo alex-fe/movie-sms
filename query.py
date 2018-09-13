@@ -89,7 +89,6 @@ def format_movie_data(movies, title):
     Returns:
         String with movie title and times.
     """
-    # import pdb; pdb.set_trace()
     try:
         selection = next(mov for mov in movies.values() if title in mov.title)
     except StopIteration:

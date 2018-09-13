@@ -1,10 +1,10 @@
 import pytest
 
-from query import Movie, Theater
+from query import Movie, Theater, format_movie_data
 
 
 # Query.py
-class TestTheater(object):
+class TestTheater:
 
     def setup(self):
         self.name = 'TEST'
@@ -12,12 +12,12 @@ class TestTheater(object):
         self.theater = Theater(self.name, self.showtimes)
 
     def test_repr(self):
-        assert self.theater.theater == repr(self.theater)
+        assert self.theater.name == repr(self.theater)
 
     def test_theater_str(self):
         assert (
             str(self.theater)
-            == '{}: {}'.format(self.name, ', '.join(self.showtimes))
+            == '{}: {}'.format(self.theater.name, ', '.join(self.showtimes))
         )
 
 
@@ -54,6 +54,25 @@ class TestMovie:
         )
         assert self.movie.showtimes == desired_results
 
+
+class TestFormatMovieData:
+
+    MOVIE_NOT_FOUND_TXT = "Couldn't find movie {title} in showtimes"
+
+    def setup(self):
+        self.movies = {}
+        for i in range(3):
+            title = 'TEST {}'.format(i)
+            self.movies.update({title: Movie(title, 'r', '1 hr 30')})
+
+    def test_movie_not_found(self):
+        """Assert if movie not found, return error message."""
+        title = 'NO MOVIE!'
+        assert all(title != m.title for m in self.movies.values())
+        assert (
+            format_movie_data(self.movies, title)
+            == self.MOVIE_NOT_FOUND_TXT.format(title=title)
+        )
 
 
 # def test_split_line():
