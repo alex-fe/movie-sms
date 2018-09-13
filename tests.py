@@ -1,44 +1,73 @@
 import pytest
 
-from query import Movie, sum_ratings
+from query import Movie, Theater
 
 
-def test_sum_ratings():
-    """Assert sum_ratings acurately sums the receiption from the three provided
-    sources.
-    """
-    values = [78, 81, 77]
-    test_data = {
-        'Metascore': str(values[0]),
-        'imdbRating': str(values[1] / 10),
-        'Ratings': [None, {'Value': '{}%'.format(values[2])}]
-    }
-    expected = round(sum(values) / len(values))
-    assert expected == sum_ratings(test_data)
+# Query.py
+class TestTheater(object):
+
+    def setup(self):
+        self.name = 'TEST'
+        self.showtimes = ['{}:00pm'.format(i) for i in range(3)]
+        self.theater = Theater(self.name, self.showtimes)
+
+    def test_repr(self):
+        assert self.theater.theater == repr(self.theater)
+
+    def test_theater_str(self):
+        assert (
+            str(self.theater)
+            == '{}: {}'.format(self.name, ', '.join(self.showtimes))
+        )
 
 
-def test_split_line():
-    """Assert that function split_line in query.py divides the movie
-    information into the correct bins.
-    """
-    test_line = 'christopher robin (pg) · 1 hr 44 min'
-    m = Movie(test_line)
-    assert m.title == 'christopher robin'
-    assert m.rating == 'pg'
-    assert m.duration == '1 hr 44 min'
+class TestMovie:
 
-    test_line = 'christopher robin'
-    m = Movie(test_line)
-    assert m.title == 'christopher robin'
-    assert m.rating == ''
-    assert m.duration == ''
+    def setup(self):
+        self.title = 'TEST'
+        self.rating = 'pg'
+        self.duration = '1hr and 30mins'
+        self.movie = Movie(self.title, self.rating, self.duration)
+
+    def test_repr(self):
+        assert self.movie.title == repr(self.movie)
+
+    def test_str(self):
+        assert str(self.movie) == '{}, {}, {}'.format(
+            self.title, self.rating, self.duration
+        )
+
+    def test_showtimes(self):
+        """Test Movie.showtimes returns str(Theater), new line separated."""
+        theaters = []
+        theater_len = 3
+        for i in range(theater_len):
+            theater = Theater(
+                'TEST {}'.format(i),
+                ['{}:{}0pm'.format(x, i) for x in range(1, 4)]
+            )
+            theaters.append(theater)
+            self.movie.theaters.append(theater)
+        desired_results = (
+            "{}\n{}\n{}"
+            .format(str(theaters[0]), str(theaters[1]), str(theaters[2]))
+        )
+        assert self.movie.showtimes == desired_results
 
 
-# class TestClass(object):
-#     def test_one(self):
-#         x = "this"
-#         assert 'h' in x
+
+# def test_split_line():
+#     """Assert that function split_line in query.py divides the movie
+#     information into the correct bins.
+#     """
+#     test_line = 'christopher robin (pg) · 1 hr 44 min'
+#     m = Movie(test_line)
+#     assert m.title == 'christopher robin'
+#     assert m.rating == 'pg'
+#     assert m.duration == '1 hr 44 min'
 #
-#     def test_two(self):
-#         x = "hello"
-#         assert hasattr(x, 'check')
+#     test_line = 'christopher robin'
+#     m = Movie(test_line)
+#     assert m.title == 'christopher robin'
+#     assert m.rating == ''
+#     assert m.duration == ''

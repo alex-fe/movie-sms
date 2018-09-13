@@ -17,12 +17,15 @@ FANDANGO_LINK = (
 
 
 class Theater(object):
-    def __init__(self, theater, showtimes):
-        self.theater = theater
+    def __init__(self, name, showtimes):
+        self.name = name
         self.showtimes = showtimes
 
     def __str__(self):
-        return '{}: {}'.format(self.theater, ', '.join(self.showtimes))
+        return '{}: {}'.format(self.name, ', '.join(self.showtimes))
+
+    def __repr__(self):
+        return self.name
 
 
 class Movie(object):
@@ -42,6 +45,9 @@ class Movie(object):
             val for val in self.__dict__.values()
             if val and not isinstance(val, list)
         )
+
+    def __repr__(self):
+        return self.title
 
 
 def movie_data_query(**kwargs):
