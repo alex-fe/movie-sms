@@ -61,24 +61,17 @@ def movie_data_query(**kwargs):
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
     json = requests.get(link).json
     if json.get('Error', '') == 'Movie not found!':
-        movie_str = 'Movie info for {} not found.'.format(kwargs['t'].title())
+        return 'Movie info for {} not found.'.format(kwargs['t'].title())
     else:
-        ratings = {
-            'metascore': json['Metascore'],
-            'imdb': json['imdbRating'],
-            'rotten_tomatoes': json['Ratings'][0]['Value']
-        }
-        movie_str = (
+        return (
             "{0[Title]}\n{0[Rated]}, {0[Year]}, {0[Runtime]}\n{0[Genre]}\n"
             "Director: {0[Director]}\nCast: {0[Actors]}\n{0[Plot]}\n"
-            "Metascore: {1[metascore]}\nIMDB: {1[imdb]}\n"
-            "Rotten Tomatoes: {1[rotten_tomatoes]}\n\n"
+            "Metascore: {0[Metascore]}\nIMDB: {0[imdbRating]}\n"
+            "Rotten Tomatoes: {0[Ratings][0][Value]}\n\n"
             "----------\n"
             "To receive showtimes in your area for this film, please respond "
             "SHOWTIMES and the zipcode. E.g. SHOWTIMES 97211"
-        )
-        movie_str = movie_str.format(json, ratings)
-    return movie_str
+        ).format(json)
 
 
 def format_movie_data(movies, title):

@@ -1,11 +1,12 @@
 import datetime
-import http.client
 import unittest.mock as mock
 from collections import namedtuple
 
 import pytest
 
-from query import Movie, Theater, format_movie_data, movie_data_query
+from query import (
+    Movie, Theater, format_movie_data, movie_data_query
+)
 
 
 # Query.py
@@ -64,21 +65,43 @@ class TestMovieDataQuery:
 
     def setup(self):
         self.title = 'TEST'
-        self.zip = 'test_zip'
-        self.start_date = datetime.datetime.today().strftime('%m-%d-%Y')
-        self.Response = namedtuple('Response', 'json')
+        zipcode = 'test_zip'
+        date = datetime.datetime.today().strftime('%m-%d-%Y')
+        self.kwargs = {'t': self.title, 'zip': zipcode, 'start_date': date}
+        self.http_response = namedtuple('http_response', 'json')
 
     @mock.patch('query.requests.get')
     def test_movie_not_found(self, request_get_mock):
-        request_get_mock.return_value = self.Response(
-            {"Error": "Movie not found!"}
+        request_get_mock.return_value = self.http_response(
+            json={"Error": "Movie not found!"}
         )
-        results = movie_data_query(
-            t=self.title, zip=self.zip, start_date=self.start_date
-        )
-        import pdb; pdb.set_trace()
+        results = movie_data_query(**self.kwargs)
         movie_str = 'Movie info for {} not found.'.format(self.title.title())
         assert results == movie_str
+
+    @mock.patch('query.requests.get')
+    def test_movie_found(self, request_get_mock):
+        """Assert that the movie_str is correctly populated."""
+        data = {
+            'Title': self.title,
+            'Rated': 'R',
+            'Year': '2017',
+            'Runtime': '1hr 20mins',
+            'Genre': 'Test',
+            'Director': 'Test Testington',
+            'Actors': 'T. Test, Tessa Test',
+            'Plot': self.test_movie_found.__doc__,
+            'Metascore': '86',
+            'imdbRating': '4.2',
+            'Ratings': [{'Value': '54%'}]
+        }
+        request_get_mock.return_value = self.http_response(json=data)
+        movie_str = movie_data_query(**self.kwargs)
+        for x, y in data.items():
+            if x != 'Ratings':
+                assert y in movie_str
+            else:
+                assert y[0]['Value'] in movie_str
 
 
 class TestFormatMovieData:
