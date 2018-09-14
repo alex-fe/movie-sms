@@ -1,8 +1,8 @@
-import json
 import re
 import urllib.parse
 import urllib.request
 
+import requests
 from bs4 import BeautifulSoup
 
 from private_info import OMDB_API_KEY
@@ -59,14 +59,14 @@ def movie_data_query(**kwargs):
     """
     kwargs.update({'apikey': OMDB_API_KEY})
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
-    data = json.loads(urllib.request.urlopen(link).read().decode('utf-8'))
-    if data.get('Error', '') == 'Movie not found!':
+    json = requests.get(link).json
+    if json.get('Error', '') == 'Movie not found!':
         movie_str = 'Movie info for {} not found.'.format(kwargs['t'].title())
     else:
         ratings = {
-            'metascore': data['Metascore'],
-            'imdb': data['imdbRating'],
-            'rotten_tomatoes': data['Ratings'][0]['Value']
+            'metascore': json['Metascore'],
+            'imdb': json['imdbRating'],
+            'rotten_tomatoes': json['Ratings'][0]['Value']
         }
         movie_str = (
             "{0[Title]}\n{0[Rated]}, {0[Year]}, {0[Runtime]}\n{0[Genre]}\n"
@@ -77,7 +77,7 @@ def movie_data_query(**kwargs):
             "To receive showtimes in your area for this film, please respond "
             "SHOWTIMES and the zipcode. E.g. SHOWTIMES 97211"
         )
-        movie_str = movie_str.format(data, ratings)
+        movie_str = movie_str.format(json, ratings)
     return movie_str
 
 

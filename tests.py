@@ -1,6 +1,11 @@
+import datetime
+import http.client
+import unittest.mock as mock
+from collections import namedtuple
+
 import pytest
 
-from query import Movie, Theater, format_movie_data
+from query import Movie, Theater, format_movie_data, movie_data_query
 
 
 # Query.py
@@ -55,6 +60,27 @@ class TestMovie:
         assert self.movie.showtimes == desired_results
 
 
+class TestMovieDataQuery:
+
+    def setup(self):
+        self.title = 'TEST'
+        self.zip = 'test_zip'
+        self.start_date = datetime.datetime.today().strftime('%m-%d-%Y')
+        self.Response = namedtuple('Response', 'json')
+
+    @mock.patch('query.requests.get')
+    def test_movie_not_found(self, request_get_mock):
+        request_get_mock.return_value = self.Response(
+            {"Error": "Movie not found!"}
+        )
+        results = movie_data_query(
+            t=self.title, zip=self.zip, start_date=self.start_date
+        )
+        import pdb; pdb.set_trace()
+        movie_str = 'Movie info for {} not found.'.format(self.title.title())
+        assert results == movie_str
+
+
 class TestFormatMovieData:
 
     MOVIE_NOT_FOUND_TXT = "Couldn't find movie {title} in showtimes"
@@ -63,7 +89,7 @@ class TestFormatMovieData:
         self.movies = {}
         for i in range(3):
             title = 'TEST {}'.format(i)
-            self.movies.update({title: Movie(title, 'r', '1 hr 30')})
+            self.movies.update({title: Movie(title, 'r', '1hr 3{}'.format(i))})
 
     def test_movie_not_found(self):
         """Assert if movie not found, return error message."""
@@ -73,6 +99,18 @@ class TestFormatMovieData:
             format_movie_data(self.movies, title)
             == self.MOVIE_NOT_FOUND_TXT.format(title=title)
         )
+
+    def test_movie_found(self):
+        """Assert if movie not found, return error message."""
+        title = 'TEST 1'
+        showtimes = ['{}:00pm'.format(i) for i in range(1, 4)]
+        assert any(title == m.title for m in self.movies.values())
+
+        self.movies[title].theaters.append(Theater('THEATER', showtimes))
+        results = format_movie_data(self.movies, title)
+        movie_str, showtime_str = results.split('\n')
+        assert title.title() in movie_str
+        assert all(st in showtime_str for st in showtimes)
 
 
 # def test_split_line():
