@@ -5,7 +5,8 @@ from collections import namedtuple
 import pytest
 
 from query import (
-    Movie, Theater, format_movie_data, movie_data_query
+    NOT_FOUND_STR, Movie, Theater, format_movie_data, movie_data_query,
+    showtimes_query
 )
 
 
@@ -65,9 +66,6 @@ class TestMovieDataQuery:
 
     def setup(self):
         self.title = 'TEST'
-        zipcode = 'test_zip'
-        date = datetime.datetime.today().strftime('%m-%d-%Y')
-        self.kwargs = {'t': self.title, 'zip': zipcode, 'start_date': date}
         self.http_response = namedtuple('http_response', 'json')
 
     @mock.patch('query.requests.get')
@@ -75,9 +73,11 @@ class TestMovieDataQuery:
         request_get_mock.return_value = self.http_response(
             json={"Error": "Movie not found!"}
         )
-        results = movie_data_query(**self.kwargs)
-        movie_str = 'Movie info for {} not found.'.format(self.title.title())
-        assert results == movie_str
+        result_str = movie_data_query(t=self.title)
+        assert (
+            result_str ==
+            NOT_FOUND_STR.format(id='Movie info', t=self.title.title())
+        )
 
     @mock.patch('query.requests.get')
     def test_movie_found(self, request_get_mock):
@@ -96,7 +96,7 @@ class TestMovieDataQuery:
             'Ratings': [{'Value': '54%'}]
         }
         request_get_mock.return_value = self.http_response(json=data)
-        movie_str = movie_data_query(**self.kwargs)
+        movie_str = movie_data_query(t=self.title)
         for x, y in data.items():
             if x != 'Ratings':
                 assert y in movie_str
@@ -135,6 +135,23 @@ class TestFormatMovieData:
         assert title.title() in movie_str
         assert all(st in showtime_str for st in showtimes)
 
+
+class TestShowtimesQuery:
+
+    def setup(self):
+        self.title = 'TEST'
+        zipcode = '97211'
+        date = datetime.datetime.today().strftime('%m-%d-%Y')
+        self.kwargs = {'t': self.title, 'zip': zipcode, 'start_date': date}
+
+    @mock.patch('urllib.request.urlopen')
+    def test_showtimes_not_found(self, urlopen_mock):
+        urlopen_mock.side_effect = ValueError()
+        result_str = showtimes_query(**self.kwargs)
+        assert (
+            result_str ==
+            NOT_FOUND_STR.format(id='Showtimes', t=self.title.title())
+        )
 
 # def test_split_line():
 #     """Assert that function split_line in query.py divides the movie

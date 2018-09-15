@@ -7,13 +7,13 @@ from bs4 import BeautifulSoup
 
 from private_info import OMDB_API_KEY
 
-COMMANDS = ['info', 'showtimes']
 OMDB_LINK = 'http://www.omdbapi.com/'
 FANDANGO_LINK = (
     'https://www.fandango.com/theaterlistings-prn.aspx?'
     'location={0[zip]}&pn=1&sdate={0[start_date]}&'
     'tid=AAAPP,AAJMM,AAIJQ,AANJV,AAWPB,AAHIP,AANVP,AAHIF,AAHIJ,AAUHN'
 )
+NOT_FOUND_STR = '{id} for {t} not found.'
 
 
 class Theater(object):
@@ -61,7 +61,7 @@ def movie_data_query(**kwargs):
     link = '?'.join((OMDB_LINK, urllib.parse.urlencode(kwargs)))
     json = requests.get(link).json
     if json.get('Error', '') == 'Movie not found!':
-        return 'Movie info for {} not found.'.format(kwargs['t'].title())
+        return NOT_FOUND_STR.format(id='Movie info', t=kwargs['t'].title())
     else:
         return (
             "{0[Title]}\n{0[Rated]}, {0[Year]}, {0[Runtime]}\n{0[Genre]}\n"
@@ -121,7 +121,7 @@ def showtimes_query(**kwargs):
     try:
         html = urllib.request.urlopen(req)
     except ValueError:
-        return 'Showtimes for {} not found.'.format(kwargs['t'])
+        return NOT_FOUND_STR.format(id='Showtimes', t=kwargs['t'].title())
     else:
         soup = BeautifulSoup(html, 'html.parser')
         movies = {}
@@ -130,7 +130,6 @@ def showtimes_query(**kwargs):
             for row in theater_table.find_all('tr')[1:]:
                 movie_line = ' '.join(row.find('td').text.split()).lower()
                 title, rating, duration = split_line(movie_line)
-                print(title, rating, duration)
                 movie = movies.get(title, Movie(title, rating, duration))
                 showtimes = [st.text for st in row.find_all('span')]
                 movie.theaters.append(Theater(theater, showtimes))
