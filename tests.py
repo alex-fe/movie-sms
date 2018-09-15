@@ -3,14 +3,15 @@ import unittest.mock as mock
 from collections import namedtuple
 
 import pytest
+from bs4 import BeautifulSoup
 
 from query import (
     NOT_FOUND_STR, Movie, Theater, format_movie_data, movie_data_query,
-    showtimes_query
+    showtimes_query, split_line
 )
 
 
-# Query.py
+@pytest.mark.query
 class TestTheater:
 
     def setup(self):
@@ -28,6 +29,7 @@ class TestTheater:
         )
 
 
+@pytest.mark.query
 class TestMovie:
 
     def setup(self):
@@ -62,6 +64,7 @@ class TestMovie:
         assert self.movie.showtimes == desired_results
 
 
+@pytest.mark.query
 class TestMovieDataQuery:
 
     def setup(self):
@@ -104,6 +107,7 @@ class TestMovieDataQuery:
                 assert y[0]['Value'] in movie_str
 
 
+@pytest.mark.query
 class TestFormatMovieData:
 
     MOVIE_NOT_FOUND_TXT = "Couldn't find movie {title} in showtimes"
@@ -136,6 +140,7 @@ class TestFormatMovieData:
         assert all(st in showtime_str for st in showtimes)
 
 
+@pytest.mark.query
 class TestShowtimesQuery:
 
     def setup(self):
@@ -153,18 +158,35 @@ class TestShowtimesQuery:
             NOT_FOUND_STR.format(id='Showtimes', t=self.title.title())
         )
 
-# def test_split_line():
-#     """Assert that function split_line in query.py divides the movie
-#     information into the correct bins.
-#     """
-#     test_line = 'christopher robin (pg) · 1 hr 44 min'
-#     m = Movie(test_line)
-#     assert m.title == 'christopher robin'
-#     assert m.rating == 'pg'
-#     assert m.duration == '1 hr 44 min'
-#
-#     test_line = 'christopher robin'
-#     m = Movie(test_line)
-#     assert m.title == 'christopher robin'
-#     assert m.rating == ''
-#     assert m.duration == ''
+    def test_split_line_complete_row(self):
+        duration = '1 hr 30 min'
+        rating = 'R'
+        row = """
+        <tr>
+            <td>{}
+                <div class="new_banner_printable">
+                    <img src="" alt="New">
+                </div>
+                ({}) • {}
+            </td>
+        </tr>
+        """.format(self.title, rating, duration)
+        row_soup = BeautifulSoup(row, 'html.parser')
+        results = split_line(row_soup)
+        assert results[0] == self.title.lower()
+        assert results[1] == rating.lower()
+        assert results[2] == duration
+
+    def test_split_line_incomplete_row(self):
+        row = """
+        <tr>
+            <td colspan="2">
+                Showtimes are currently not available for this theater.&nbsp;
+                Please check back later.
+            </td>
+        </tr>
+        """
+        row_soup = BeautifulSoup(row, 'html.parser')
+        results = split_line(row_soup)
+        for res in results:
+            assert not res

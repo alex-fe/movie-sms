@@ -91,17 +91,21 @@ def format_movie_data(movies, title):
         return '\n'.join([str(movie).title(), movie.showtimes])
 
 
-def split_line(line):
+def split_line(row):
     """Split the movie information into its correct variables.
     Args:
         line (str): Movie information condensed into passed string.
     """
-    if not all(char in line for char in ['hr', 'min', '(', ')']):
-        title = line
-        duration = ""
-        rating = ""
+    movie_line = ' '.join(row.find('td').text.split()).lower()
+    if (
+        movie_line.startswith('showtimes are currently not available')
+        or not all(char in movie_line for char in ['hr', 'min', '(', ')'])
+    ):
+        title = ''
+        duration = ''
+        rating = ''
     else:
-        items = re.split('\W+', line)
+        items = re.split('\W+', movie_line)
         title = ' '.join(items[:-5])
         duration = ' '.join(items[-4:])
         rating = items[-5:-4][0]
@@ -128,9 +132,11 @@ def showtimes_query(**kwargs):
         for theater_table in soup.find_all('table'):
             theater = theater_table.find('h4').text.strip()
             for row in theater_table.find_all('tr')[1:]:
-                movie_line = ' '.join(row.find('td').text.split()).lower()
-                title, rating, duration = split_line(movie_line)
-                movie = movies.get(title, Movie(title, rating, duration))
+                movie_header = split_line(row)
+                title = movie_header[0]
+                if all(not x for x in movie_header):
+                    continue
+                movie = movies.get(title, Movie(*movie_header))
                 showtimes = [st.text for st in row.find_all('span')]
                 movie.theaters.append(Theater(theater, showtimes))
                 if movie not in movies:
