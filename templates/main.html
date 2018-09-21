@@ -6,17 +6,17 @@
     </head>
     <body>
       {% for message in messages %}
-        {% if message.from_ == "+18028814653" %}
-          <div class="message-container outgoing">
-        {% else %}
-          <div class="message-container incoming">
-        {% endif %}
+        <div class="message-container">
           <ul>
-            <li>
-              <div>{{ message.from_ }} ---> {{ message.to }}</div>
+            {% if message.from_ == "+18028814653" %}
+              <li class="outbound">
+            {% else %}
+              <li class="inbound">
+            {% endif %}
+              <div>{{ message.from_|number }} ---> {{ message.to|number }}</div>
               <div>Sent: {{ message.date_sent|strftime }}</div>
               <div>Direction: {{ message.direction }}</div>
-              <div>{{ message.body }}</div>
+              <div>{{ message.body|newline }}</div>
             </li>
           </ul>
         </div>

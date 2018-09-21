@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, render_template, request
+from flask import Flask, Markup, render_template, request
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
@@ -14,6 +14,16 @@ client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
 @app.route("/", methods=['GET'])
 def check_app():
     return render_template('main.html', messages=client.messages.list())
+
+
+@app.template_filter('number')
+def _convert_phone_number(p):
+    return p[:2] + '.' + p[2:5] + '.' + p[5:8] + '.' + p[8:]
+
+
+@app.template_filter('newline')
+def _breakline(text):
+    return Markup(text.replace('\n', '<br>'))
 
 
 @app.template_filter('strftime')
