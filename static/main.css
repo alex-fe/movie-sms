@@ -7,16 +7,17 @@
 }
 
 .outbound {
-  background: #344055;
-  color: #FCFCFF;
+  background: #C6C8EE;
+  color: #341E20;
 }
 
 .inbound {
-  background: #C6C8EE;
-  color: #341E20;
+  background: #344055;
+  color: #FCFCFF;
 }
 
 .message-container li{
   list-style-type: none;
   padding: 10px;
+  box-shadow: 3px 6px 1px #EFF0FA;
 }

@@ -2,18 +2,19 @@
     <head>
         <title>Movie Times</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
         <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     </head>
     <body>
       {% for message in messages %}
         <div class="message-container">
           <ul>
-            {% if message.from_ == "+18028814653" %}
+            {% if message.from_ == "+15183104065" %}
               <li class="outbound">
             {% else %}
               <li class="inbound">
             {% endif %}
-              <div>{{ message.from_|number }} ---> {{ message.to|number }}</div>
+              <div>{{ message.from_|number }} <i class="fas fa-angle-double-right"></i> {{ message.to|number }}</div>
               <div>Sent: {{ message.date_sent|strftime }}</div>
               <div>Direction: {{ message.direction }}</div>
               <div>{{ message.body|newline }}</div>
