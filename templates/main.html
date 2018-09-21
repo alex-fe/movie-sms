@@ -6,7 +6,11 @@
     </head>
     <body>
       {% for message in messages %}
-        <div class="message-container">
+        {% if message.from_ == "+18028814653" %}
+          <div class="message-container outgoing">
+        {% else %}
+          <div class="message-container incoming">
+        {% endif %}
           <ul>
             <li>
               <div>{{ message.from_ }} ---> {{ message.to }}</div>
