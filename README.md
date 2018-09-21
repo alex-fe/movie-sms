@@ -1,8 +1,9 @@
 # movie-sms
-Currently does two processes:
-* By sending _info_ followed by the name of the film, the program will send back a short summary. E.g. `info blade runner`
-![Asking for information](https://i.imgur.com/qvLeNOF.png)
 
-* By sending showtimes followed by the name of the film and zipcode, the program will send back showtimes in your area.
-E.g. `showtimes christopher robin 97211`
+Currently has two process:
+1) One can text a movie title to the app it send an SMS in return with the correct title. One can follow up this command with `SHOWTIMES` and their area code for local showtimes.
 ![Asking for showtimes](https://i.imgur.com/V4zA5Tg.png)
+2) Flask site the keeps list of messages
+![site](https://imgur.com/a/r1YVHHu)
+
+
