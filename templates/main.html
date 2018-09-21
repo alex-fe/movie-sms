@@ -11,15 +11,16 @@
           <ul>
             {% if message.from_ == "+15183104065" %}
               <li class="outbound">
+                <div><i class="fas fa-angle-double-right"></i></div>
             {% else %}
               <li class="inbound">
+                <div><i class="fas fa-angle-double-left"></i></div>
             {% endif %}
-              <div>{{ message.from_|number }} <i class="fas fa-angle-double-right"></i> {{ message.to|number }}</div>
               <div>Sent: {{ message.date_sent|strftime }}</div>
-              <div>Direction: {{ message.direction }}</div>
               <div>{{ message.body|newline }}</div>
             </li>
           </ul>
+
         </div>
       {% endfor %}
     </body>
