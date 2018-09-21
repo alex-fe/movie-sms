@@ -101,9 +101,7 @@ def split_line(row):
         movie_line.startswith('showtimes are currently not available')
         or not all(char in movie_line for char in ['hr', 'min', '(', ')'])
     ):
-        title = ''
-        duration = ''
-        rating = ''
+        return False
     else:
         items = re.split('\W+', movie_line)
         title = ' '.join(items[:-5])
@@ -133,9 +131,9 @@ def showtimes_query(**kwargs):
             theater = theater_table.find('h4').text.strip()
             for row in theater_table.find_all('tr')[1:]:
                 movie_header = split_line(row)
-                title = movie_header[0]
-                if all(not x for x in movie_header):
+                if not movie_header:
                     continue
+                title = movie_header[0]
                 movie = movies.get(title, Movie(*movie_header))
                 showtimes = [st.text for st in row.find_all('span')]
                 movie.theaters.append(Theater(theater, showtimes))

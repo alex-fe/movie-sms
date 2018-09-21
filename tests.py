@@ -188,5 +188,4 @@ class TestShowtimesQuery:
         """
         row_soup = BeautifulSoup(row, 'html.parser')
         results = split_line(row_soup)
-        for res in results:
-            assert not res
+        assert not results

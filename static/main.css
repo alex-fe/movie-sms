@@ -1,0 +1,13 @@
+.message-container {
+  padding: 2px;
+  margin: 5px;
+  border-radius: 25px;
+  background: #CFB3CD;
+  width: 60%;
+  text-align: left;
+}
+
+.message-container li{
+  list-style-type: none;
+  color: white;
+}
